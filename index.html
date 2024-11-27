@@ -1,167 +1,175 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-    <title>Order Form</title>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
-    <script>
-        // TODO: Add your Firebase configuration here
-        var firebaseConfig = {
-            apiKey: "AIzaSyBq3mFtT01VepSK-JMonMQhP9nRQXOp0ro",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            projectId: "recipeapp-7e2db",
-            storageBucket: "recipeapp-7e2db.appspot.com",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
-        };
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        var db = firebase.firestore();
-        var storage = firebase.storage();
-
-        function uploadImage(file) {
-            return new Promise((resolve, reject) => {
-                var storageRef = storage.ref('recipe_images/' + file.name);
-                var uploadTask = storageRef.put(file);
-
-                uploadTask.on('state_changed', 
-                    function(snapshot) {
-                        // Observe state change events such as progress, pause, and resume
-                    }, 
-                    function(error) {
-                        // Handle unsuccessful uploads
-                        reject(error);
-                    }, 
-                    function() {
-                        // Handle successful uploads on complete
-                        uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) {
-                            resolve(downloadURL);
-                        });
-                    }
-                );
-            });
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Хамсафар — Форма заказа</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+            padding-bottom: 100px; /* Добавлен отступ снизу */
         }
-
-        function submitOrder(event) {
-            event.preventDefault();
-
-            var id = document.getElementById("id").value;
-            var pointA = document.getElementById("pointA").value;
-            var pointB = document.getElementById("pointB").value;
-            var pointDescription = document.getElementById("pointDescription").value;
-            var description = document.getElementById("description").value;
-            var price = document.getElementById("price").value;
-            var phoneUser = document.getElementById("phoneUser").value;
-            var imageFiles = document.getElementById("imageUrls").files;
-
-            if (imageFiles.length > 0) {
-                var imageUrlsPromises = [];
-                for (var i = 0; i < imageFiles.length; i++) {
-                    imageUrlsPromises.push(uploadImage(imageFiles[i]));
-                }
-
-                Promise.all(imageUrlsPromises).then((imageUrls) => {
-                    saveOrder({
-                        id: id,
-                        pointA: pointA,
-                        pointB: pointB,
-                        pointDescription: pointDescription,
-                        imageUrls: imageUrls,
-                        description: description,
-                        price: price,
-                        phoneUser: phoneUser
-                    });
-                }).catch(function(error) {
-                    alert("Error uploading images: " + error.message);
-                });
-            } else {
-                saveOrder({
-                    id: id,
-                    pointA: pointA,
-                    pointB: pointB,
-                    pointDescription: pointDescription,
-                    imageUrls: [],
-                    description: description,
-                    price: price,
-                    phoneUser: phoneUser
-                });
-            }
+        header {
+            background-color: #007BFF;
+            color: white;
+            padding: 15px;
+            text-align: center;
         }
-
-        function saveOrder(orderData) {
-            db.collection("recipes").add(orderData)
-            .then(function() {
-                alert("Order successfully submitted!");
-                document.getElementById("orderForm").reset();
-                loadOrders();
-            })
-            .catch(function(error) {
-                alert("Error submitting order: " + error.message);
-            });
+        main {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
         }
-
-        function loadOrders() {
-            var ordersList = document.getElementById("ordersList");
-            ordersList.innerHTML = "";
-            db.collection("recipes").get().then((querySnapshot) => {
-                querySnapshot.forEach((doc) => {
-                    var order = doc.data();
-                    var orderItem = document.createElement("li");
-                    orderItem.textContent = `ID: ${order.id}, Point A: ${order.pointA}, Point B: ${order.pointB}, Description: ${order.description}, Price: ${order.price}, Phone: ${order.phoneUser}`;
-                    
-                    var deleteButton = document.createElement("button");
-                    deleteButton.textContent = "Delete";
-                    deleteButton.onclick = function() {
-                        db.collection("recipes").doc(doc.id).delete().then(function() {
-                            alert("Order successfully deleted!");
-                            loadOrders();
-                        }).catch(function(error) {
-                            alert("Error deleting order: " + error.message);
-                        });
-                    };
-                    orderItem.appendChild(deleteButton);
-                    ordersList.appendChild(orderItem);
-                });
-            });
+        form {
+            display: flex;
+            flex-direction: column;
         }
-
-        window.onload = function() {
-            loadOrders();
+        label {
+            margin-bottom: 5px;
+            font-weight: bold;
         }
-    </script>
+        input[type="text"], select, textarea {
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        input[type="submit"] {
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+        footer {
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+            left: 0;
+            box-sizing: border-box;
+        }
+        footer a {
+            color: #ffcc00;
+            text-decoration: none;
+        }
+    </style>
 </head>
 <body>
-    <h1>Order Form</h1>
+
+<header>
+    <h1>Хамсафар</h1>
+    <p>Ваш надежный партнер по доставке междугородных грузов</p>
+</header>
+
+<main>
+    <h2>Заполните форму для оформления заказа</h2>
     <form id="orderForm" onsubmit="submitOrder(event)">
-        <label for="id">ID:</label><br>
-        <input type="text" id="id" name="id"><br>
 
-        <label for="pointA">Point A:</label><br>
-        <input type="text" id="pointA" name="pointA"><br>
+        <label for="pointA">Точка А:</label>
+        <select id="pointA" name="pointA" required>
+            <option value="Hujand">Худжанд</option>
+            <option value="Dushanbe">Душанбе</option>
+        </select>
 
-        <label for="pointB">Point B:</label><br>
-        <input type="text" id="pointB" name="pointB"><br>
+        <label for="pointB">Точка Б:</label>
+        <select id="pointB" name="pointB" required>
+            <option value="Hujand">Худжанд</option>
+            <option value="Dushanbe">Душанбе</option>
+        </select>
 
-        <label for="pointDescription">Point Description:</label><br>
-        <input type="text" id="pointDescription" name="pointDescription"><br>
+        <label for="productName">Название товара:</label>
+        <input type="text" id="productName" name="productName" required placeholder="Введите название товара">
 
-        <label for="imageUrls">Images:</label><br>
-        <input type="file" id="imageUrls" name="imageUrls" multiple><br>
+        <label for="volumeType">Тип объема товара:</label>
+        <select id="volumeType" name="volumeType" required>
+            <option value="kg">Килограммы (кг)</option>
+            <option value="m3">Кубические метры (м³)</option>
+            <option value="pcs">Штуки (шт)</option>
+        </select>
 
-        <label for="description">Description:</label><br>
-        <input type="text" id="description" name="description"><br>
+        <label for="volume">Объем товара:</label>
+        <input type="text" id="volume" name="volume" required>
 
-        <label for="price">Price:</label><br>
-        <input type="text" id="price" name="price"><br>
+        <label for="phoneUser">Телефон:</label>
+        <input type="text" id="phoneUser" name="phoneUser" required>
 
-        <label for="phoneUser">Phone Number:</label><br>
-        <input type="text" id="phoneUser" name="phoneUser"><br><br>
+        <!-- Поле для дополнительной информации -->
+        <label for="additionalInfo">Дополнительная информация:</label>
+        <textarea id="additionalInfo" name="additionalInfo" rows="4" placeholder="Укажите дополнительные пожелания или информацию по заказу"></textarea>
 
-        <input type="submit" value="Submit">
+        <input type="submit" value="Отправить заказ">
+        <p>Наш оператор свяжется с вами для уточнения адреса и расчета стоимости доставки.</p>  
     </form>
+</main>
 
-    <h2>Orders List</h2>
-    <ul id="ordersList"></ul>
+<footer>
+    <p>Лицензия: ООО "Хамсафар" 2024</p>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+<script>
+    // TODO: Добавьте вашу конфигурацию Firebase
+    var firebaseConfig = {
+        apiKey: "AIzaSyBq3mFtT01VepSK-JMonMQhP9nRQXOp0ro",
+        authDomain: "YOUR_AUTH_DOMAIN",
+        projectId: "recipeapp-7e2db",
+        storageBucket: "recipeapp-7e2db.appspot.com",
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+        appId: "YOUR_APP_ID"
+    };
+    // Инициализация Firebase
+    firebase.initializeApp(firebaseConfig);
+    var db = firebase.firestore();
+
+    function submitOrder(event) {
+        event.preventDefault();
+
+        var productName = document.getElementById("productName").value;
+        var pointA = document.getElementById("pointA").value;
+        var pointB = document.getElementById("pointB").value;
+        var volumeType = document.getElementById("volumeType").value;
+        var volume = document.getElementById("volume").value;
+        var phoneUser = document.getElementById("phoneUser").value;
+        var additionalInfo = document.getElementById("additionalInfo").value;
+
+        // Сохранение заказа в Firebase
+        db.collection("orders").add({
+            productName: productName,
+            pointA: pointA,
+            pointB: pointB,
+            volumeType: volumeType,
+            volume: volume,
+            phoneUser: phoneUser,
+            additionalInfo: additionalInfo
+        })
+        .then(function() {
+            alert("Заказ успешно отправлен!");
+            document.getElementById("orderForm").reset();
+        })
+        .catch(function(error) {
+            alert("Ошибка при отправке заказа: " + error.message);
+        });
+    }
+</script>
+
 </body>
 </html>
